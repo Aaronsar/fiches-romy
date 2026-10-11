@@ -90,7 +90,7 @@ function show(view) {
   }
   for (const v of document.querySelectorAll(".view")) v.hidden = v.id !== `view-${view}`;
   if (view === "home") renderLibrary();
-  if (view === "settings") { $("#apikey").value = getKey(); $("#workspace").value = getWorkspace(); }
+  if (view === "settings") { $("#apikey").value = getKey(); $("#workspace").value = getWorkspace(); showKeyInfo(); }
   if (view === "new" && !getKey()) {
     showError("Ajoute d'abord la clé API dans les réglages (⚙︎).");
   }
@@ -440,6 +440,7 @@ $("#form-settings").addEventListener("submit", (e) => {
     w ? localStorage.setItem(WS_KEY, w) : localStorage.removeItem(WS_KEY);
   } catch {}
   flash(k ? "Clé enregistrée ✓" : "Clé supprimée.");
+  showKeyInfo();
   showError("");
 });
 $("#btn-export").addEventListener("click", () => {
@@ -463,6 +464,14 @@ $("#import").addEventListener("change", async (e) => {
     flash(`${data.length} fiche(s) restaurée(s) ✓`);
   } catch { flash("Fichier non reconnu.", true); }
 });
+function showKeyInfo() {
+  const k = getKey();
+  const p = $("#key-info");
+  p.hidden = !k;
+  if (!k) return;
+  const type = k.startsWith("sk-ant-api") ? "clé classique ✓" : k.startsWith("sk-ant-usr") ? "clé liée à un compte : il faut l'ID du workspace, ou une clé classique" : "format inhabituel";
+  p.textContent = `Clé enregistrée : ${k.slice(0, 14)}…${k.slice(-4)} (${type})`;
+}
 function flash(msg, bad) {
   const p = $("#settings-msg");
   p.textContent = msg; p.className = bad ? "error" : "ok"; p.hidden = false;
