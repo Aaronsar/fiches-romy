@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Fiches de Romy</title>
+  <meta name="description" content="Transforme les photos de tes cours en fiches de révision propres et imprimables." />
+  <meta name="theme-color" content="#fbf7f0" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📒</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar no-print">
+    <a class="brand" href="#" data-nav="home">📒 <span>Les fiches de Romy</span></a>
+    <nav>
+      <button class="navbtn" data-nav="new">＋ Nouvelle fiche</button>
+      <button class="navbtn" data-nav="home">Mes fiches</button>
+      <button class="iconbtn" data-nav="settings" title="Réglages" aria-label="Réglages">⚙︎</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Bibliothèque -->
+    <section id="view-home" class="view">
+      <div class="hero no-print">
+        <h1>Tes fiches de révision</h1>
+        <p>Prends tes cours en photo, Claude en fait une fiche claire, prête à réviser ou à imprimer.</p>
+        <button class="btn primary big" data-nav="new">＋ Créer une fiche</button>
+      </div>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Rechercher un chapitre…" />
+        <select id="filter-matiere"><option value="">Toutes les matières</option></select>
+      </div>
+      <div id="library" class="library"></div>
+      <p id="empty" class="empty" hidden>Aucune fiche pour l'instant. Crée ta première ! ✨</p>
+    </section>
+
+    <!-- Nouvelle fiche -->
+    <section id="view-new" class="view" hidden>
+      <h1>Nouvelle fiche</h1>
+      <form id="form-new" class="card form">
+        <label>Matière
+          <select id="matiere" required></select>
+        </label>
+        <label id="autre-wrap" hidden>Nom de la matière
+          <input id="matiere-autre" type="text" placeholder="ex. Latin" />
+        </label>
+        <label>Chapitre
+          <input id="chapitre" type="text" required placeholder="ex. Le second degré" />
+        </label>
+
+        <div class="field">
+          <span class="label">Photos du cours <small>(dans l'ordre des pages)</small></span>
+          <div class="photo-actions">
+            <label class="btn">📷 Prendre une photo
+              <input id="cam" type="file" accept="image/*" capture="environment" hidden />
+            </label>
+            <label class="btn">🖼️ Choisir des photos
+              <input id="gallery" type="file" accept="image/*" multiple hidden />
+            </label>
+          </div>
+          <div id="thumbs" class="thumbs"></div>
+        </div>
+
+        <label>Consignes en plus <small>(facultatif)</small>
+          <textarea id="consignes" rows="2" placeholder="ex. insiste sur les méthodes, le contrôle est sur les exercices type…"></textarea>
+        </label>
+
+        <p id="form-error" class="error" hidden></p>
+        <button id="btn-generate" class="btn primary big" type="submit">✨ Générer ma fiche</button>
+      </form>
+    </section>
+
+    <!-- Fiche -->
+    <section id="view-fiche" class="view" hidden>
+      <div class="fiche-actions no-print">
+        <button class="btn" data-nav="home">← Mes fiches</button>
+        <div class="spacer"></div>
+        <button id="btn-edit" class="btn">✏️ Modifier</button>
+        <button id="btn-download" class="btn">⬇︎ Texte</button>
+        <button id="btn-delete" class="btn danger">🗑</button>
+        <button id="btn-print" class="btn primary">🖨 Imprimer / PDF</button>
+      </div>
+      <div id="status" class="status no-print" hidden>
+        <div class="spinner"></div>
+        <div>
+          <strong id="status-title">Claude lit tes photos…</strong>
+          <p id="status-sub">Ça prend en général 1 à 2 minutes. Garde la page ouverte.</p>
+        </div>
+      </div>
+      <div id="edit-wrap" class="edit-wrap no-print" hidden>
+        <textarea id="editor" spellcheck="true"></textarea>
+        <div class="row"><button id="btn-save-edit" class="btn primary">Enregistrer</button><button id="btn-cancel-edit" class="btn">Annuler</button></div>
+      </div>
+      <article id="fiche" class="fiche"></article>
+    </section>
+
+    <!-- Réglages -->
+    <section id="view-settings" class="view" hidden>
+      <h1>Réglages</h1>
+      <form id="form-settings" class="card form">
+        <label>Clé API Claude
+          <input id="apikey" type="password" autocomplete="off" placeholder="sk-ant-…" />
+        </label>
+        <p class="hint">La clé reste uniquement dans ce navigateur (elle n'est envoyée qu'à Anthropic). Tu peux en créer une sur <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.</p>
+        <div class="row">
+          <button class="btn primary" type="submit">Enregistrer</button>
+          <button id="btn-export" class="btn" type="button">Sauvegarder mes fiches</button>
+          <label class="btn">Restaurer<input id="import" type="file" accept="application/json" hidden /></label>
+        </div>
+        <p id="settings-msg" class="ok" hidden></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@14.1.4/lib/marked.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
