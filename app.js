@@ -22,6 +22,7 @@ const MAX_PHOTOS = 20;
 const MAX_SIDE = 1568;
 const STORE_KEY = "romy.fiches.v1";
 const KEY_KEY = "romy.apikey";
+const WS_KEY = "romy.workspace";
 
 const SYSTEM_PROMPT = `Tu es un excellent professeur de lycée en France. Tu fabriques des fiches de révision pour une élève de Première (programme officiel du lycée général, réforme du bac).
 
@@ -80,6 +81,7 @@ function upsertFiche(f) {
   saveFiches(list);
 }
 function getKey() { try { return localStorage.getItem(KEY_KEY) || ""; } catch { return ""; } }
+function getWorkspace() { try { return localStorage.getItem(WS_KEY) || ""; } catch { return ""; } }
 
 // ---------- navigation ----------
 function show(view) {
@@ -88,7 +90,7 @@ function show(view) {
   }
   for (const v of document.querySelectorAll(".view")) v.hidden = v.id !== `view-${view}`;
   if (view === "home") renderLibrary();
-  if (view === "settings") $("#apikey").value = getKey();
+  if (view === "settings") { $("#apikey").value = getKey(); $("#workspace").value = getWorkspace(); }
   if (view === "new" && !getKey()) {
     showError("Ajoute d'abord la clé API dans les réglages (⚙︎).");
   }
@@ -233,7 +235,12 @@ $("#form-new").addEventListener("submit", async (e) => {
   renderFiche(fiche);
 
   try {
-    const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+    const workspace = getWorkspace();
+    const client = new Anthropic({
+      apiKey,
+      dangerouslyAllowBrowser: true,
+      defaultHeaders: workspace ? { "anthropic-workspace-id": workspace } : undefined,
+    });
     const stream = client.beta.messages.stream({
       model: "claude-opus-5-5",
       max_tokens: 32000,
@@ -281,6 +288,7 @@ $("#form-new").addEventListener("submit", async (e) => {
 function explainError(err) {
   const s = err?.status;
   const m = String(err?.message || err);
+  if (/workspace/i.test(m)) return "Cette clé doit être liée à un workspace : ajoute l'ID du workspace dans les réglages (⚙︎), ou crée une clé API classique (sk-ant-api03-…) sur console.anthropic.com.";
   if (s === 401) return "Clé API refusée. Vérifie-la dans les réglages (⚙︎).";
   if (s === 403) return "Cette clé n'a pas accès à ce modèle.";
   if (s === 429) return "Trop de demandes d'un coup. Attends une minute et réessaie.";
@@ -426,7 +434,11 @@ $("#btn-cancel-edit").addEventListener("click", () => { $("#edit-wrap").hidden =
 $("#form-settings").addEventListener("submit", (e) => {
   e.preventDefault();
   const k = $("#apikey").value.trim();
-  try { k ? localStorage.setItem(KEY_KEY, k) : localStorage.removeItem(KEY_KEY); } catch {}
+  const w = $("#workspace").value.trim();
+  try {
+    k ? localStorage.setItem(KEY_KEY, k) : localStorage.removeItem(KEY_KEY);
+    w ? localStorage.setItem(WS_KEY, w) : localStorage.removeItem(WS_KEY);
+  } catch {}
   flash(k ? "Clé enregistrée ✓" : "Clé supprimée.");
   showError("");
 });
